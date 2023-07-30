@@ -1,0 +1,164 @@
+import React, { Component } from "react";
+import Spinner from "./Spinner";
+import NewsItem from "./NewsItem";
+import PropTypes from "prop-types";
+export class News extends Component {
+  static defaultProps = {
+    ApiKeyy: "f5c8c88e284b4f82969556397d03bdb6",
+    country: "in",
+    pageSize: 8,
+    category: "general",
+  };
+  static propTypes = {
+    ApiKeyy: PropTypes.string,
+    country: PropTypes.string,
+    pageSize: PropTypes.number,
+    categpry: PropTypes.string,
+  };
+
+  handlePreviousClick = async () => {
+    let Url = `https://newsapi.org/v2/top-headlines?country=${
+      this.props.country
+    }&category=${this.props.category}&apiKey=${this.props.ApiKeyy}&page=${
+      this.state.page - 1
+    }&pageSize=${this.props.pageSize}`;
+    this.setState({ loading: true });
+    let data = await fetch(Url);
+    let parsedData = await data.json();
+    this.setState({ articles: parsedData.articles });
+    this.setState({
+      page: this.state.page - 1,
+      loading: false,
+    });
+  };
+   changeToUpperCase(founder) {
+    return founder.toUpperCase();
+  }
+  handleNextClick = async () => {
+    if (
+      this.state.page + 1 >
+      Math.ceil(this.state.totalResults / this.props.pageSize)
+    ) {
+    } else {
+      let Url = `https://newsapi.org/v2/top-headlines?country=${
+        this.props.country
+      }&category=${this.props.category}&apiKey=${this.props.ApiKeyy}&page=${
+        this.state.page + 1
+      }&pageSize=${this.props.pageSize}`;
+      this.setState({ loading: true });
+      let data = await fetch(Url);
+      let parsedData = await data.json();
+      this.setState({ articles: parsedData.articles });
+
+      this.setState({
+        page: this.state.page + 1,
+        loading: false,
+      });
+    }
+  };
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      articles: [],
+      loading: false,
+      page: 1,
+      totalResults: {},
+      
+    };
+  }
+
+  async componentDidMount() {
+    let Url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.props.ApiKeyy}&page=1&pageSize=${this.props.pageSize}`;
+    this.setState({ loading: true });
+    let data = await fetch(Url);
+    let parsedData = await data.json();
+    console.log(Url);
+    this.setState({
+      articles: parsedData.articles,
+      totalResults: parsedData.totalResults,
+      loading: false,
+    });
+  }
+  render() {
+    return (
+      <>
+        <div className="container my-3">
+          <h1 className="text-center my-4">
+            <strong>Today's News</strong>
+          </h1>
+          <div className="card text-center bg-warning card-title-spacer-10 my-4 text-danger" style={{padding:"5px",fontSize:"30px"}}>
+  <strong> 
+  {this.changeToUpperCase(this.props.category).slice(0,1)+this.props.category.slice(1)}</strong>
+  </div>
+          {this.state.loading ? (
+            <Spinner />
+          ) : (
+            <div className="row">
+              {this.state.articles.map((element) => {
+                return (
+                  <div className="col-md-4" key={element.url}>
+                    {" "}
+                    <NewsItem
+                      title={
+                        element.title != null
+                          ? element.title.slice(0, 47)
+                          : "Title is not Available"
+                      }
+                      description={
+                        element.description !== null
+                          ? element.description.slice(0, 190)
+                          : "Description is not Available"
+                      }
+                      imageUrl={
+                        element.urlToImage !== null
+                          ? element.urlToImage
+                          : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSkdGbj-QrUuNqhXP7DtY3-t8yD6H1Tk4uFg&usqp=CAU"
+                      }
+                      newsUrl={element.url}
+                      source={
+                        element.source.name
+                          ? element.source.name
+                          : "Unknown Source"
+                      }
+                      date={element.publishedAt}
+                      author={
+                        element.author ? element.author : "Unknown Author"
+                      }
+                    />{" "}
+                  </div>
+                );
+              })}
+              <div className="containter d-flex justify-content-between">
+                <button
+                  type="button"
+                  hidden={this.state.loading}
+                  disabled={this.state.page === 1}
+                  onClick={this.handlePreviousClick}
+                  className="btn btn-dark"
+                >
+                  {" "}
+                  &larr; Previous
+                </button>
+                <button
+                  type="button"
+                  hidden={this.state.loading}
+                  disabled={
+                    this.state.page + 1 >
+                    Math.ceil(this.state.totalResults / this.props.pageSize)
+                  }
+                  onClick={this.handleNextClick}
+                  className="btn btn-dark"
+                >
+                  Next &rarr;
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </>
+    );
+  }
+}
+
+export default News;
